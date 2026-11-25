@@ -7,6 +7,7 @@ clock. The entry is the joke at CANDIDATES[SELECTED], written to
 <MAKEFUN_OUTPUT_DIR>/entry.txt (default /output/entry.txt).
 """
 
+import hashlib
 import os
 
 CANDIDATES = [
@@ -32,16 +33,46 @@ CANDIDATES = [
 SELECTED = 0
 
 
-def main() -> None:
-    joke = CANDIDATES[SELECTED].strip()
-    assert "\n" not in joke, "entry must be a single line"
-    assert 1 <= len(joke) <= 200, "entry must be 1 to 200 characters"
+def validate_entry(joke: str) -> None:
+    """Check the selected joke against the gate with explicit failures.
+
+    Explicit SystemExit checks are used instead of assert so the gate
+    still holds when Python runs with -O (which strips asserts).
+    """
+    if "\n" in joke or "\r" in joke:
+        raise SystemExit("entry must be a single line")
+    if not 1 <= len(joke) <= 200:
+        raise SystemExit("entry must be 1 to 200 characters")
+    if not joke.strip():
+        raise SystemExit("entry must not be only whitespace")
+    if joke != joke.strip():
+        raise SystemExit("entry must not have edge whitespace")
+
+
+def write_entry(joke: str) -> str:
+    """Write the joke plus one newline, then read it back and verify.
+
+    The read-back bytes must equal the intended UTF-8 bytes exactly and
+    hash to the same sha256 digest. Returns the digest.
+    """
+    validate_entry(joke)
+    intended = (joke + "\n").encode("utf-8")
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "entry.txt")
     with open(path, "w", encoding="utf-8") as f:
         f.write(joke + "\n")
-    print(joke)
+    with open(path, "rb") as handle:
+        written = handle.read()
+    if written != intended:
+        raise SystemExit("entry.txt bytes differ from the intended entry")
+    return hashlib.sha256(written).hexdigest()
+
+
+def main() -> None:
+    joke = CANDIDATES[SELECTED].strip()
+    digest = write_entry(joke)
+    print(f"{joke} [sha256 {digest}]")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+Write one original hilarious one-liner (max 200 characters) for the make.fun
+bounty "One Line, One Laugh" (program/v1). The program is main.py, standard
+library only, deterministic: it writes the chosen line to
+/output/entry.txt and validates the gate itself (single line, 1-200
+characters, not only whitespace). Draft ~10 candidates in CANDIDATES.md,
+pick the sharpest on surprise, economy, freshness and clean wording, and
+avoid AI-assistant, cat and coding-agent themes already used by our earlier
+one-line entries.
